@@ -13,17 +13,25 @@ export default function App() {
     const wrapper = async () => {
       let req = await fetch(third_party_uri).then(res => res.json());
 
-      setMods(
-        Object.entries(req)
-          .filter(mod => mod[0].includes(searchInput))
-          .map(async mod => {
-            let reqSize = await fetch(
-              "http://localhost:8000/check?slug=x/" + mod[0] + "/mod.ts"
-            ).then(res => res.text());
+      let __mods = Object.entries(req)
+        .filter(mod => mod[0].includes(searchInput))
+        .map(mod => {
+          mod[2] = `http://3.130.89.246:8000/check?slug=${"x/" + mod[0]}`;
+          return mod;
+        });
 
-            mod[2] = reqSize;
-          })
-      );
+      for (let mod of mods) {
+        let sizeReq;
+        try {
+          sizeReq = await fetch(mod[2]);
+          mod[1] = {
+            ...mod[1],
+            size: sizeReq.text()
+          };
+        } catch {}
+      }
+
+      setMods(__mods);
     };
     wrapper();
   }, [searchInput]);
@@ -39,7 +47,10 @@ export default function App() {
       <h2>Start editing to see some magic happen!</h2>
       <ul>
         {mods.map(mod => (
-          <li>{mod[0]}</li>
+          <li>
+            {mod[0]} - {mod[1].size}
+            {/* <button onClick={}>See Size</button> */}
+          </li>
         ))}
       </ul>
     </div>
